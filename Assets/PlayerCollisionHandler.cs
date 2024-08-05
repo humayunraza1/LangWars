@@ -5,8 +5,15 @@ public class PlayerCollisionHandler : MonoBehaviour
     private Rigidbody rb;
     private Animator animator;
 
+    [SerializeField] private AudioClip clip;
+    [SerializeField] private AudioSource audio;
+    private PlayerLivesManager livesManager;
     private void Start()
     {
+        audio = GetComponent<AudioSource>();
+        audio.clip = clip;
+        audio.pitch = 0.7f;
+        livesManager = GetComponent<PlayerLivesManager>();
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
         rb.freezeRotation = true; // Ensure the Rigidbody's rotation is initially frozen
@@ -21,7 +28,9 @@ public class PlayerCollisionHandler : MonoBehaviour
             if (characterMovement != null)
             {
                 characterMovement.HandleObstacleCollision(collision);
+                audio.PlayOneShot(clip);
             }
+            livesManager.LoseLife();
         }
     }
 }

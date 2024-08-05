@@ -26,18 +26,24 @@ public class QuestionManager : MonoBehaviour
     public TMP_Text timerText; // Text element for the timer
     public TMP_Text resumeTimerText; // Text element for the resume timer
     public TMP_Text QuestionNumber; // Text element for the resume timer
+    public GameObject loseUIPanel; // UI Panel to show when the player loses
 
     [SerializeField] private CoinCollector coinCollector;
     private float questionTime = 10f;
     private float resumeDelay = 3f;
     private int currentQuestionIndex;
     private int currentLevelIndex;
+    private int wrongAnswersCount = 0;
+    private const int maxWrongAnswers = 2;
 
     public LevelManager levelManager;
 
     void Start()
     {
+        ResetWrongAnswers();
         questionPanel.SetActive(false); // Ensure the question panel is initially hidden
+        loseUIPanel.SetActive(false); // Ensure the lose panel is initially hidden
+
         levelManager = FindObjectOfType<LevelManager>();
         currentLevelIndex = levelManager.GetCurrentLevelIndex();
         Debug.Log("Current level is " + currentLevelIndex);
@@ -123,7 +129,8 @@ public class QuestionManager : MonoBehaviour
             Debug.LogError("Invalid currentQuestionIndex: " + currentQuestionIndex);
             return;
         }
-        QuestionNumber.text = $"Question {currentQuestionIndex+1}";
+
+        QuestionNumber.text = $"Question {currentQuestionIndex + 1}";
         Question question = levelQuestions[currentLevelIndex].questions[currentQuestionIndex];
         questionText.text = question.questionText;
 
@@ -161,7 +168,6 @@ public class QuestionManager : MonoBehaviour
     {
         StopAllCoroutines();
         questionPanel.SetActive(false);
-        StartCoroutine(ResumeGameCountdown());
 
         // Handle the selected answer (index)
         if (index == levelQuestions[currentLevelIndex].questions[currentQuestionIndex].correctAnswerIndex)
@@ -175,7 +181,15 @@ public class QuestionManager : MonoBehaviour
             Debug.Log("Incorrect answer selected!");
             coinCollector.AddToScore(-20);
             // Handle incorrect answer logic
+            wrongAnswersCount++;
+            if (wrongAnswersCount >= maxWrongAnswers)
+            {
+                ShowLoseUI();
+                return;
+            }
         }
+
+        StartCoroutine(ResumeGameCountdown());
     }
 
     IEnumerator ResumeGameCountdown()
@@ -192,5 +206,16 @@ public class QuestionManager : MonoBehaviour
 
         resumeTimerText.gameObject.SetActive(false);
         Time.timeScale = 1f; // Resume the game
+    }
+
+    void ShowLoseUI()
+    {
+        Time.timeScale = 0f; // Stop the game
+        loseUIPanel.SetActive(true); // Show the lose UI
+    }
+
+    public void ResetWrongAnswers()
+    {
+        wrongAnswersCount = 0;
     }
 }

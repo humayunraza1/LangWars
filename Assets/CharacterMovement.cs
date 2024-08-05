@@ -5,32 +5,41 @@ public class CharacterMovement : MonoBehaviour
 {
     public float speed = 5f; // Speed of the character in units per second
     public float targetZ = 300f; // Target position on the Z axis
-    public float moveSpeed = 2f; // Speed of moving left and right
     private bool isMoving = true;
     private bool canMoveLeft = true;
     private bool canMoveRight = true;
     private Animator animator;
     private bool isColliding = false;
     private float originalSpeed;
-
     private Collider currentObstacleCollider;
 
     // Cached Transform component
     private Transform playerTransform;
 
+    // Swipe duration
+    public float swipeDuration = 0.5f;
+    private Coroutine swipeCoroutine;
+
+    private Vector3 startingPosition;
+
     void Start()
     {
         playerTransform = transform; // Cache the Transform component
         animator = GetComponent<Animator>();
-        animator.ResetTrigger("Run");
+        animator.ResetTrigger("Idle");
         animator.SetTrigger("Run");
         originalSpeed = speed;
+
+        // Set initial X position to 4.3 and store the starting position
+        startingPosition = new Vector3(10.51f, playerTransform.position.y, playerTransform.position.z);
+        playerTransform.position = startingPosition;
     }
 
     void Update()
     {
         if (isMoving && !isColliding)
-        {
+        {   
+            animator.SetTrigger("Run");
             float step = speed * Time.deltaTime; // Calculate distance to move
             Vector3 targetPosition = new Vector3(playerTransform.position.x, playerTransform.position.y, targetZ);
             playerTransform.position = Vector3.MoveTowards(playerTransform.position, targetPosition, step);
@@ -46,23 +55,18 @@ public class CharacterMovement : MonoBehaviour
                     animator.ResetTrigger("Run");
                     animator.SetTrigger("Idle");
                 }
-                canMoveLeft = false;
-                canMoveRight = false;
             }
         }
-        else
-        {
-            canMoveLeft = isMoving;
-            canMoveRight = isMoving;
-        }
 
-        if (canMoveLeft && Input.GetKey(KeyCode.LeftArrow))
+        if (Input.GetKeyDown(KeyCode.LeftArrow) && canMoveLeft)
         {
-            MoveLeft();
+            if (swipeCoroutine != null) StopCoroutine(swipeCoroutine);
+            swipeCoroutine = StartCoroutine(MoveToPosition(new Vector3(10.51f, playerTransform.position.y, playerTransform.position.z)));
         }
-        if (canMoveRight && Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKeyDown(KeyCode.RightArrow) && canMoveRight)
         {
-            MoveRight();
+            if (swipeCoroutine != null) StopCoroutine(swipeCoroutine);
+            swipeCoroutine = StartCoroutine(MoveToPosition(new Vector3(29.21f, playerTransform.position.y, playerTransform.position.z)));
         }
 
         // Ensure the player stays on the ground during the stumble animation
@@ -70,34 +74,25 @@ public class CharacterMovement : MonoBehaviour
         {
             EnsurePlayerOnGround();
         }
+
+        // Update movement availability based on position
+        canMoveLeft = playerTransform.position.x != 10.51f;
+        canMoveRight = playerTransform.position.x != 29.21f;
     }
 
-    void MoveLeft()
+    IEnumerator MoveToPosition(Vector3 targetPosition)
     {
-        RaycastHit hit;
-        if (Physics.Raycast(playerTransform.position, Vector3.left, out hit, 0.1f))
-        {
-            if (hit.collider.CompareTag("Boundary"))
-            {
-                Debug.Log("Player collided with the left boundary.");
-                return;
-            }
-        }
-        playerTransform.position += Vector3.left * moveSpeed * Time.deltaTime;
-    }
+        float elapsedTime = 0f;
+        Vector3 startingPosition = playerTransform.position;
 
-    void MoveRight()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(playerTransform.position, Vector3.right, out hit, 0.1f))
+        while (elapsedTime < swipeDuration)
         {
-            if (hit.collider.CompareTag("Boundary"))
-            {
-                Debug.Log("Player collided with the right boundary.");
-                return;
-            }
+            playerTransform.position = Vector3.Lerp(startingPosition, targetPosition, elapsedTime / swipeDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
         }
-        playerTransform.position += Vector3.right * moveSpeed * Time.deltaTime;
+
+        playerTransform.position = targetPosition;
     }
 
     void OnCollisionEnter(Collision collision)
@@ -174,8 +169,6 @@ public class CharacterMovement : MonoBehaviour
 
         isColliding = false;
         isMoving = true;
-        canMoveLeft = true;
-        canMoveRight = true;
 
         // Revert the obstacle collider back to its original state
         if (currentObstacleCollider != null)
@@ -196,10 +189,18 @@ public class CharacterMovement : MonoBehaviour
 
     public void ResetMovement()
     {
+        // Reset position
+        playerTransform.position = startingPosition;
+        // Reset other variables
         isMoving = true;
-        canMoveLeft = true;
-        canMoveRight = true;
-        animator.ResetTrigger("Idle");
-        animator.SetTrigger("Run");
+        isColliding = false;
+        speed = originalSpeed;
+        if (animator != null)
+        {
+            animator.ResetTrigger("Idle");
+            animator.SetTrigger("Run");
+        }
+        // Stop any ongoing swipe coroutine
+        if (swipeCoroutine != null) StopCoroutine(swipeCoroutine);
     }
 }

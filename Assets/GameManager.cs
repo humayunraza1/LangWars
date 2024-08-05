@@ -12,15 +12,17 @@ public class GameManager : MonoBehaviour
     public GameObject levelsCanvas;
     [SerializeField] private CoinCollector coinCollector;
 
+    [SerializeField] private QuestionManager Qmanager;
     [SerializeField] private CharacterMovement characterMovement;
     [SerializeField] private CoinSpawner coinSpawnerScript;
 
     [SerializeField] private QuestionCubeSpawner questionSpawnerScript;
     [SerializeField] private ObstacleSpawner obstacleSpawner;
+    [SerializeField] private PlayerLivesManager lives;
     void Start()
     {
+        obstacleSpawner.enabled = false;
         PlayerObject.SetActive(false);
-        obstacleSpawner.gameObject.SetActive(false);
         // Disable the scripts at the start
         // Set the initial camera to the UI camera
         uiCamera.enabled = true;
@@ -33,6 +35,7 @@ public class GameManager : MonoBehaviour
         // Enable the scripts
         PlayerObject.SetActive(true);
         obstacleSpawner.gameObject.SetActive(true);
+        obstacleSpawner.SpawnObstacleWave();
         characterMovement.enabled = true;
         coinSpawnerScript.enabled = true;
         questionSpawnerScript.enabled = true;
@@ -46,7 +49,14 @@ public class GameManager : MonoBehaviour
 
     public void ChangeBackCamera()
     {
+        characterMovement.ResetMovement();
+        coinSpawnerScript.ClearCoins();
+        questionSpawnerScript.ClearCubes();
+       obstacleSpawner.ResetObstacles();
+       Qmanager.ResetWrongAnswers();
+        lives.ResetLives();
         PlayerObject.SetActive(false);
+        obstacleSpawner.enabled = false;
         characterMovement.enabled = false;
         coinSpawnerScript.enabled = false;
         questionSpawnerScript.enabled = false;

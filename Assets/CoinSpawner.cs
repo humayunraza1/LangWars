@@ -5,8 +5,6 @@ public class CoinSpawner : MonoBehaviour
 {
     public GameObject coinPrefab; // Reference to the coin prefab
     public float spawnInterval = 2f; // Time between spawns
-    public float minX = 0f; // Minimum X position for spawning
-    public float maxX = 30f; // Maximum X position for spawning
     public float fixedY = 12.1f; // Fixed Y position for spawning
     public float minZ = 3f; // Minimum Z position for spawning
     public float maxZ = 300f; // Maximum Z position for spawning
@@ -21,7 +19,6 @@ public class CoinSpawner : MonoBehaviour
 
     void Start()
     {
-
         // Initialize the spawn time
         nextSpawnTime = Time.time;
 
@@ -51,7 +48,7 @@ public class CoinSpawner : MonoBehaviour
             {
                 SpawnCoin();
             }
-            
+
             nextSpawnTime = Time.time + spawnInterval;
         }
     }
@@ -65,7 +62,7 @@ public class CoinSpawner : MonoBehaviour
         // Attempt to find a valid position for the new coin
         while (!validPosition && attempts < 100)
         {
-            float randomX = Random.Range(minX, maxX);
+            float randomX = Random.Range(0, 2) == 0 ? 10.6f : 29.6f; // Choose either 4.3 or 23.3 for the X position
             float randomZ = Random.Range(minZ, maxZ);
             spawnPosition = new Vector3(randomX, fixedY, randomZ);
 
@@ -117,3 +114,4 @@ public class CoinSpawner : MonoBehaviour
         spawnedCoins.Clear();
     }
 }
+
