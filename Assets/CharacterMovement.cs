@@ -3,8 +3,8 @@ using System.Collections;
 
 public class CharacterMovement : MonoBehaviour
 {
-    public float speed = 5f; // Speed of the character in units per second
-    public float targetZ = 300f; // Target position on the Z axis
+    public float speed = 10f; // Speed of the character in units per second
+    public float targetZ = 450f; // Target position on the Z axis
     private bool isMoving = true;
     private bool canMoveLeft = true;
     private bool canMoveRight = true;
@@ -21,6 +21,14 @@ public class CharacterMovement : MonoBehaviour
     private Coroutine swipeCoroutine;
 
     private Vector3 startingPosition;
+
+    // Swipe detection variables
+    private Vector2 startTouchPosition;
+    private Vector2 currentTouchPosition;
+    private Vector2 endTouchPosition;
+    private bool stopTouch = false;
+    public float swipeRange = 50f; // Minimum distance for a swipe to be considered
+    public float tapRange = 10f; // Maximum distance for a touch to be considered a tap
 
     void Start()
     {
@@ -58,16 +66,7 @@ public class CharacterMovement : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow) && canMoveLeft)
-        {
-            if (swipeCoroutine != null) StopCoroutine(swipeCoroutine);
-            swipeCoroutine = StartCoroutine(MoveToPosition(new Vector3(10.51f, playerTransform.position.y, playerTransform.position.z)));
-        }
-        if (Input.GetKeyDown(KeyCode.RightArrow) && canMoveRight)
-        {
-            if (swipeCoroutine != null) StopCoroutine(swipeCoroutine);
-            swipeCoroutine = StartCoroutine(MoveToPosition(new Vector3(29.21f, playerTransform.position.y, playerTransform.position.z)));
-        }
+        DetectSwipe();
 
         // Ensure the player stays on the ground during the stumble animation
         if (isColliding)
@@ -78,6 +77,51 @@ public class CharacterMovement : MonoBehaviour
         // Update movement availability based on position
         canMoveLeft = playerTransform.position.x != 10.51f;
         canMoveRight = playerTransform.position.x != 29.21f;
+    }
+
+    void DetectSwipe()
+    {
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            startTouchPosition = Input.GetTouch(0).position;
+            stopTouch = false;
+        }
+
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)
+        {
+            currentTouchPosition = Input.GetTouch(0).position;
+            Vector2 distance = currentTouchPosition - startTouchPosition;
+
+            if (!stopTouch)
+            {
+                if (distance.x < -swipeRange && canMoveLeft)
+                {
+                    // Swipe left
+                    stopTouch = true;
+                    if (swipeCoroutine != null) StopCoroutine(swipeCoroutine);
+                    swipeCoroutine = StartCoroutine(MoveToPosition(new Vector3(10.51f, playerTransform.position.y, playerTransform.position.z)));
+                }
+                else if (distance.x > swipeRange && canMoveRight)
+                {
+                    // Swipe right
+                    stopTouch = true;
+                    if (swipeCoroutine != null) StopCoroutine(swipeCoroutine);
+                    swipeCoroutine = StartCoroutine(MoveToPosition(new Vector3(29.21f, playerTransform.position.y, playerTransform.position.z)));
+                }
+            }
+        }
+
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended)
+        {
+            endTouchPosition = Input.GetTouch(0).position;
+            stopTouch = false;
+
+            Vector2 distance = endTouchPosition - startTouchPosition;
+            if (Mathf.Abs(distance.x) < tapRange && Mathf.Abs(distance.y) < tapRange)
+            {
+                // It's a tap, do nothing
+            }
+        }
     }
 
     IEnumerator MoveToPosition(Vector3 targetPosition)

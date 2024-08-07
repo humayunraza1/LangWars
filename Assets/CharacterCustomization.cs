@@ -1,113 +1,112 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;  // Import TextMesh Pro namespace
-
-[System.Serializable]
-public class ColorOption
-{
-    public string name;
-    public string hexCode;
-    public Color color;
-}
+using TMPro;
 
 public class CharacterCustomization : MonoBehaviour
 {
-    [SerializeField] private Material hairMaterial;
-    [SerializeField] private Material beardMaterial;
-    [SerializeField] private Material skinMaterial;
-
-    [SerializeField] private Button prevHairButton;
-    [SerializeField] private Button nextHairButton;
-    [SerializeField] private Button prevBeardButton;
-    [SerializeField] private Button nextBeardButton;
+    [SerializeField] private GameObject[] playerSkins; // Array of player skins
     [SerializeField] private Button prevSkinButton;
     [SerializeField] private Button nextSkinButton;
-    [SerializeField] private Button CloseButton;
-    [SerializeField] private GameObject colorPanel;
+    [SerializeField] private Button customizeBackButton;
+    [SerializeField] private Button equipButton;
+    [SerializeField] private TMP_Text skinNameText; // Text to display skin name
+    [SerializeField] private TMP_Text totalCoins; // Text to display skin name
+    [SerializeField] private Animator animator; // Animator component
 
-    [SerializeField] private TMP_Text hairColorText;  // Use TMP_Text instead of Text
-    [SerializeField] private TMP_Text beardColorText; // Use TMP_Text instead of Text
-    [SerializeField] private TMP_Text skinColorText;  // Use TMP_Text instead of Text
+    private int currentSkinIndex = 0;
+    private int equippedSkinIndex = 0;
 
-    private int currentHairColorIndex = 0;
-    private int currentBeardColorIndex = 0;
-    private int currentSkinColorIndex = 0;
+    private string[] skinNames = { "Casual 1", "Casual 2", "School", "Jersey", "Blazer" };
 
-    [SerializeField] private ColorOption[] hairColors;
-    [SerializeField] private ColorOption[] skinColors;
-
-    private void Awake()
-    {
-        // Initialize hair colors
-        hairColors = new ColorOption[]
-        {
-            new ColorOption { name = "Black", hexCode = "#000000", color = Color.black },
-            new ColorOption { name = "Brown", hexCode = "#8B4513", color = new Color(0.545f, 0.271f, 0.075f) },
-            new ColorOption { name = "Dark Brown", hexCode = "#654321", color = new Color(0.396f, 0.259f, 0.129f) },
-            new ColorOption { name = "Blonde", hexCode = "#FFFACD", color = new Color(1.0f, 0.980f, 0.803f) },
-            new ColorOption { name = "Red", hexCode = "#FF4500", color = new Color(1.0f, 0.271f, 0.0f) },
-            new ColorOption { name = "Ash", hexCode = "#B2BEB5", color = new Color(0.698f, 0.745f, 0.710f) }
-        };
-
-        // Initialize skin colors
-        skinColors = new ColorOption[]
-        {
-            new ColorOption { name = "Fair", hexCode = "#FFDFC4", color = new Color(1.0f, 0.875f, 0.769f) },
-            new ColorOption { name = "Tan", hexCode = "#D2B48C", color = new Color(0.824f, 0.706f, 0.549f) },
-            new ColorOption { name = "Brown", hexCode = "#8B4513", color = new Color(0.545f, 0.271f, 0.075f) },
-            new ColorOption { name = "Dark", hexCode = "#654321", color = new Color(0.396f, 0.259f, 0.129f) }
-        };
-    }
+    private string[] animationTriggers = { "anim1", "anim2", "anim3", "anim4" };
 
     private void Start()
     {
         // Add listeners to the buttons
-        prevHairButton.onClick.AddListener(() => ChangeColor(ref currentHairColorIndex, hairColors, -1, hairMaterial, hairColorText));
-        nextHairButton.onClick.AddListener(() => ChangeColor(ref currentHairColorIndex, hairColors, 1, hairMaterial, hairColorText));
-        prevBeardButton.onClick.AddListener(() => ChangeColor(ref currentBeardColorIndex, hairColors, -1, beardMaterial, beardColorText));
-        nextBeardButton.onClick.AddListener(() => ChangeColor(ref currentBeardColorIndex, hairColors, 1, beardMaterial, beardColorText));
-        prevSkinButton.onClick.AddListener(() => ChangeColor(ref currentSkinColorIndex, skinColors, -1, skinMaterial, skinColorText));
-        nextSkinButton.onClick.AddListener(() => ChangeColor(ref currentSkinColorIndex, skinColors, 1, skinMaterial, skinColorText));
-        CloseButton.onClick.AddListener(HideColorPanel);
-        // Initialize the colors
-        UpdateMaterialColor(hairMaterial, hairColors[currentHairColorIndex]);
-        UpdateMaterialColor(beardMaterial, hairColors[currentBeardColorIndex]);
-        UpdateMaterialColor(skinMaterial, skinColors[currentSkinColorIndex]);
-
-        UpdateColorText(hairColorText, hairColors[currentHairColorIndex]);
-        UpdateColorText(beardColorText, hairColors[currentBeardColorIndex]);
-        UpdateColorText(skinColorText, skinColors[currentSkinColorIndex]);
+        prevSkinButton.onClick.AddListener(() => ChangeSkin(-1));
+        nextSkinButton.onClick.AddListener(() => ChangeSkin(1));
+        customizeBackButton.onClick.AddListener(BackToPreviousPanel);
+        equipButton.onClick.AddListener(ToggleEquip);
+        animator.SetTrigger("Idle");
+        // Initialize the skins
+        InitializeSkins();
+        UpdateSkinDisplay();
     }
 
-    private void ChangeColor(ref int colorIndex, ColorOption[] colors, int change, Material material, TMP_Text colorText)
+    private void InitializeSkins()
     {
-        colorIndex += change;
-
-        if (colorIndex < 0)
+        for (int i = 0; i < playerSkins.Length; i++)
         {
-            colorIndex = colors.Length - 1;
-        }
-        else if (colorIndex >= colors.Length)
-        {
-            colorIndex = 0;
+            playerSkins[i].SetActive(i == equippedSkinIndex);
         }
 
-        UpdateMaterialColor(material, colors[colorIndex]);
-        UpdateColorText(colorText, colors[colorIndex]);
+        currentSkinIndex = equippedSkinIndex;
     }
 
-    private void UpdateMaterialColor(Material material, ColorOption colorOption)
+    private void ChangeSkin(int change)
     {
-        material.color = colorOption.color;
+        playerSkins[currentSkinIndex].SetActive(false);
+        currentSkinIndex += change;
+
+        if (currentSkinIndex < 0)
+        {
+            currentSkinIndex = playerSkins.Length - 1;
+        }
+        else if (currentSkinIndex >= playerSkins.Length)
+        {
+            currentSkinIndex = 0;
+        }
+
+        UpdateSkinDisplay();
     }
 
-    private void UpdateColorText(TMP_Text textField, ColorOption colorOption)
+    private void UpdateSkinDisplay()
     {
-        textField.text = $"<color={colorOption.hexCode}>{colorOption.name}</color>";
+        playerSkins[currentSkinIndex].SetActive(true);
+        skinNameText.text = skinNames[currentSkinIndex]; // Update the skin name display
+
+        if (currentSkinIndex == equippedSkinIndex)
+        {
+            equipButton.GetComponentInChildren<TMP_Text>().text = "Unequip";
+            equipButton.gameObject.SetActive(currentSkinIndex != 0);
+        }
+        else
+        {
+            equipButton.GetComponentInChildren<TMP_Text>().text = "Equip";
+            equipButton.gameObject.SetActive(true);
+        }
     }
-     
-        void HideColorPanel()
+
+    private void ToggleEquip()
     {
-        colorPanel.SetActive(false);
+        if (currentSkinIndex == equippedSkinIndex)
+        {
+            // Unequip the current skin and revert to default
+            equippedSkinIndex = 0;
+        }
+        else
+        {
+            // Equip the selected skin
+            equippedSkinIndex = currentSkinIndex;
+            TriggerRandomAnimation();
+        }
+
+        UpdateSkinDisplay();
+    }
+
+    private void TriggerRandomAnimation()
+    {
+        // Trigger a random animation
+        int randomIndex = Random.Range(0, animationTriggers.Length);
+        animator.SetTrigger(animationTriggers[randomIndex]);
+    }
+
+    private void BackToPreviousPanel()
+    {
+        playerSkins[currentSkinIndex].SetActive(false);
+        currentSkinIndex = equippedSkinIndex;
+        playerSkins[currentSkinIndex].SetActive(true);
+
+        UpdateSkinDisplay();
     }
 }

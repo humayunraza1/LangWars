@@ -27,7 +27,9 @@ public class QuestionManager : MonoBehaviour
     public TMP_Text resumeTimerText; // Text element for the resume timer
     public TMP_Text QuestionNumber; // Text element for the resume timer
     public GameObject loseUIPanel; // UI Panel to show when the player loses
-
+    public AudioClip wrongAudio;
+    public AudioClip correctAudio;
+    public AudioSource audioSource;
     [SerializeField] private CoinCollector coinCollector;
     private float questionTime = 10f;
     private float resumeDelay = 3f;
@@ -43,62 +45,133 @@ public class QuestionManager : MonoBehaviour
         ResetWrongAnswers();
         questionPanel.SetActive(false); // Ensure the question panel is initially hidden
         loseUIPanel.SetActive(false); // Ensure the lose panel is initially hidden
-
         levelManager = FindObjectOfType<LevelManager>();
         currentLevelIndex = levelManager.GetCurrentLevelIndex();
         Debug.Log("Current level is " + currentLevelIndex);
 
         levelQuestions = new LevelQuestions[]
+{
+    new LevelQuestions
+    {
+        questions = new Question[]
         {
-            new LevelQuestions
+            new Question
             {
-                questions = new Question[]
-                {
-                    new Question
-                    {
-                        questionText = "こんにちは(Konbanwa) means:",
-                        options = new string[] {"Goodbye", "Thank you", "Hello", "Good morning"},
-                        correctAnswerIndex = 2
-                    },
-                    new Question
-                    {
-                        questionText = "あ stands for:",
-                        options = new string[] {"ka", "a", "e", "o"},
-                        correctAnswerIndex = 1
-                    },
-                    new Question
-                    {
-                        questionText = "Water in Japanese is:",
-                        options = new string[] {"みず (Mizu)", "ひ (Hi)", "つき (Tsuki)", "くるま (Kuruma)"},
-                        correctAnswerIndex = 0
-                    }
-                }
+                questionText = "こんにちは(Konbanwa) means:",
+                options = new string[] {"Goodbye", "Thank you", "Hello", "Good morning"},
+                correctAnswerIndex = 2
             },
-            new LevelQuestions
+            new Question
             {
-                questions = new Question[]
-                {
-                    new Question
-                    {
-                        questionText = "Good evening in Japanese is:",
-                        options = new string[] {"さようなら (Sayonara)", "おはよう (Ohayou)", "こんばんは (Konbanwa)", "こんにちは (Konnichiwa)"},
-                        correctAnswerIndex = 2
-                    },
-                    new Question
-                    {
-                        questionText = "じょう stands for:",
-                        options = new string[] {"jyu", "jo", "ji", "ja"},
-                        correctAnswerIndex = 1
-                    },
-                    new Question
-                    {
-                        questionText = "チ stands for:",
-                        options = new string[] {"te", "ta", "to", "chi"},
-                        correctAnswerIndex = 3
-                    }
-                }
+                questionText = "あ stands for:",
+                options = new string[] {"ka", "a", "e", "o"},
+                correctAnswerIndex = 1
+            },
+            new Question
+            {
+                questionText = "Water in Japanese is:",
+                options = new string[] {"みず (Mizu)", "ひ (Hi)", "つき (Tsuki)", "くるま (Kuruma)"},
+                correctAnswerIndex = 0
             }
-        };
+        }
+    },
+    new LevelQuestions
+    {
+        questions = new Question[]
+        {
+            new Question
+            {
+                questionText = "Good evening in Japanese is:",
+                options = new string[] {"さようなら (Sayonara)", "おはよう (Ohayou)", "こんばんは (Konbanwa)", "こんにちは (Konnichiwa)"},
+                correctAnswerIndex = 2
+            },
+            new Question
+            {
+                questionText = "じょう stands for:",
+                options = new string[] {"jyu", "jo", "ji", "ja"},
+                correctAnswerIndex = 1
+            },
+            new Question
+            {
+                questionText = "チ stands for:",
+                options = new string[] {"te", "ta", "to", "chi"},
+                correctAnswerIndex = 3
+            }
+        }
+    },
+    new LevelQuestions
+    {
+        questions = new Question[]
+        {
+            new Question
+            {
+                questionText = "木 means:",
+                options = new string[] {"Mountain (Yama)", "Water (Mizu)", "Tree (Ki)", "Sun (Hi)"},
+                correctAnswerIndex = 2
+            },
+            new Question
+            {
+                questionText = "The particle を (wo) is used for:",
+                options = new string[] {"Subject", "Object", "Location", "Time"},
+                correctAnswerIndex = 1
+            },
+            new Question
+            {
+                questionText = "すみません means:",
+                options = new string[] {"Thank you", "Excuse me", "Good night", "Please"},
+                correctAnswerIndex = 1
+            }
+        }
+    },
+    new LevelQuestions
+    {
+        questions = new Question[]
+        {
+            new Question
+            {
+                questionText = "美しい means:",
+                options = new string[] {"Happy", "Beautiful", "Sad", "Dangerous"},
+                correctAnswerIndex = 1
+            },
+            new Question
+            {
+                questionText = "Which kanji means 'mountain'?",
+                options = new string[] {"川", "山", "空", "海"},
+                correctAnswerIndex = 1
+            },
+            new Question
+            {
+                questionText = "彼女 means:",
+                options = new string[] {"Friend", "Sister", "Mother", "Girlfriend"},
+                correctAnswerIndex = 3
+            }
+        }
+    },
+    new LevelQuestions
+    {
+        questions = new Question[]
+        {
+            new Question
+            {
+                questionText = "Fill in the blank: 私は ___ です",
+                options = new string[] {"学生 (gakusei)", "魚 (sakana)", "車 (kuruma)", "本 (hon)"},
+                correctAnswerIndex = 0
+            },
+            new Question
+            {
+                questionText = "The kanji 複 stands for:",
+                options = new string[] {"Single", "Complex", "Double", "Simple"},
+                correctAnswerIndex = 1
+            },
+            new Question
+            {
+                questionText = "Fill in the blank: 彼女は ___ です",
+                options = new string[] {"明るい (akarui)", "速い (hayai)", "寒い (samui)", "熱い (atsui)"},
+                correctAnswerIndex = 0
+            }
+        }
+    }
+};
 
         Debug.Log("Level questions initialized. Number of levels: " + levelQuestions.Length);
         for (int i = 0; i < levelQuestions.Length; i++)
@@ -173,12 +246,22 @@ public class QuestionManager : MonoBehaviour
         if (index == levelQuestions[currentLevelIndex].questions[currentQuestionIndex].correctAnswerIndex)
         {
             Debug.Log("Correct answer selected!");
+            if (correctAudio != null)
+            {
+                audioSource.clip = correctAudio;
+                audioSource.PlayOneShot(correctAudio);
+            }
             coinCollector.AddToScore(30);
             // Handle correct answer logic
         }
         else
         {
             Debug.Log("Incorrect answer selected!");
+            if (wrongAudio != null)
+            {
+                audioSource.clip = wrongAudio;
+                audioSource.PlayOneShot(wrongAudio);
+            }
             coinCollector.AddToScore(-20);
             // Handle incorrect answer logic
             wrongAnswersCount++;

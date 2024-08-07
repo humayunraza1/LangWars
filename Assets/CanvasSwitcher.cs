@@ -34,11 +34,6 @@ public class CanvasSwitcher : MonoBehaviour
 
     void OnBackButtonClicked()
     {
-        // Show the home canvas and hide the customization canvas
-    if (armorManager != null)
-        {
-            armorManager.BackOut();
-        }
         ShowHomeCanvas();
     }
 

@@ -22,11 +22,10 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         obstacleSpawner.enabled = false;
-        PlayerObject.SetActive(false);
         // Disable the scripts at the start
         // Set the initial camera to the UI camera
         uiCamera.enabled = true;
-
+        playerCamera.enabled = false;
     }
 
     // Call this method to start the level
@@ -55,7 +54,6 @@ public class GameManager : MonoBehaviour
        obstacleSpawner.ResetObstacles();
        Qmanager.ResetWrongAnswers();
         lives.ResetLives();
-        PlayerObject.SetActive(false);
         obstacleSpawner.enabled = false;
         characterMovement.enabled = false;
         coinSpawnerScript.enabled = false;

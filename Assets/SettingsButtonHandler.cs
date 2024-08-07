@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-
+using TMPro;
 public class SettingsButtonHandler : MonoBehaviour
 {
     public GameObject homeCanvas;
@@ -8,6 +8,8 @@ public class SettingsButtonHandler : MonoBehaviour
     public GameObject customizeCanvas;
     public GameObject levelsSelectorCanvas;
     public GameObject pauseMenuCanvas; // Reference to the pause menu canvas
+    public Camera mainCamera; // Reference to the main camera
+    public Camera customizeCamera; // Reference to the customize camera
     public Button settingsButton;
     public Button closeButton;
     public Button customizeButton;
@@ -15,6 +17,8 @@ public class SettingsButtonHandler : MonoBehaviour
     public Button playButton;
     public Button levelsCloseButton;
 
+    [SerializeField] private CoinManager coinManager;
+    [SerializeField] private TMP_Text totalCoins; // Text to display skin name
     private AudioSource audioSource;
     private GameObject previousCanvas; // Variable to store the previous panel
 
@@ -22,7 +26,7 @@ public class SettingsButtonHandler : MonoBehaviour
     {
         // Ensure the canvases are set correctly
         audioSource = GetComponent<AudioSource>();
-
+        customizeCamera.enabled = false;
         if (homeCanvas == null)
         {
             homeCanvas = GameObject.FindWithTag("Home");
@@ -137,19 +141,18 @@ public class SettingsButtonHandler : MonoBehaviour
     void OnCustomizeButtonClicked()
     {
         if (homeCanvas != null && customizeCanvas != null)
-        {
-            if (audioSource != null)
-            {
-                audioSource.Play();
-            }
-            else
-            {
-                Debug.Log("No Audio Source");
-            }
-
+        {   
+            totalCoins.text = ""+coinManager.GetTotalCoins();
             previousCanvas = homeCanvas; // Track the previous canvas
             homeCanvas.SetActive(false);
             customizeCanvas.SetActive(true);
+
+            // Change camera
+            if (mainCamera != null && customizeCamera != null)
+            {
+                mainCamera.enabled = false;
+                customizeCamera.enabled = true;
+            }
         }
     }
 
@@ -168,6 +171,13 @@ public class SettingsButtonHandler : MonoBehaviour
 
             customizeCanvas.SetActive(false);
             homeCanvas.SetActive(true);
+
+            // Change camera back to main camera
+            if (mainCamera != null && customizeCamera != null)
+            {
+                customizeCamera.enabled = false;
+                mainCamera.enabled = true;;
+            }
         }
     }
 
