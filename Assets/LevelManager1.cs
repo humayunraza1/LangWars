@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.PlasticSCM.Editor.WebApi;
-using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine;
 
 public class LevelManager1 : MonoBehaviour
@@ -11,6 +9,7 @@ public class LevelManager1 : MonoBehaviour
 
     [SerializeField] private LevelManager levelM;
     public WinPanelController winPanel;
+
     private void Start() {
         coinCollector = FindObjectOfType<CoinCollector>();
         coinsManager = FindObjectOfType<CoinManager>();
@@ -25,7 +24,7 @@ public class LevelManager1 : MonoBehaviour
     }
 
     private void OnTriggerEnter(Collider other) {
-        if(other.gameObject.CompareTag("Finish")) {
+        if (other.gameObject.CompareTag("Finish")) {
             if (coinCollector != null && coinsManager != null) {
                 int levelCoins = coinCollector.GetTotalCoinsCollected();
                 int score = coinCollector.GetTotalScore();
@@ -36,8 +35,8 @@ public class LevelManager1 : MonoBehaviour
                 Debug.Log("Level " + currLevelIndex + " Completed");
                 Debug.Log("Coins collected this round: " + levelCoins);
                 Debug.Log("Total coins: " + totalCoins);
-                Debug.Log("Total Score: "  + score);
-                winPanel.ShowWinPanel(levelCoins,score,currLevelIndex);
+                Debug.Log("Total Score: " + score);
+                winPanel.ShowWinPanel(levelCoins, score, currLevelIndex);
             }
         }
     }

@@ -12,6 +12,7 @@ public class PauseManager : MonoBehaviour
     public Button quitButton; // The quit button
     public TMP_Text resumeTimerText; // The resume timer text
 
+    public GameManager gameManager;
     public SettingsButtonHandler settingsButtonHandler; // Reference to SettingsButtonHandler script
 
     private float resumeDelay = 3f;
@@ -45,11 +46,9 @@ public class PauseManager : MonoBehaviour
 
     void QuitGame()
     {
-        // Implement quit game logic here
-        Debug.Log("Quit Game");
-        // Example:
-        // Application.Quit();
-    }
+        pauseMenuPanel.SetActive(false); // Hide the pause menu
+        gameManager.ChangeBackCamera();
+     }
 
     IEnumerator ResumeGameCountdown()
     {
